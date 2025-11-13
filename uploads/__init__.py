@@ -1,0 +1,1 @@
+from .uploads import router as uploads_router
