@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from database import initialize_database
 from itinerary import itinerary_router
+from uploads import uploads_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -31,3 +32,4 @@ app.add_middleware(
 )
 
 app.include_router(itinerary_router)
+app.include_router(uploads_router)
