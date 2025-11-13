@@ -1,7 +1,8 @@
+from datetime import datetime
 import re
 import uuid
 from typing import List, Optional
-from sqlalchemy import JSON, Integer, String, ForeignKey, event, and_
+from sqlalchemy import JSON, Integer, String, ForeignKey, event, and_, DateTime
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, foreign
 
 def generate_id(prefix: str) -> str:
@@ -77,6 +78,8 @@ class Itinerary(Base):
     days: Mapped[List["ItineraryDay"]] = relationship("ItineraryDay", back_populates="itinerary", cascade="all, delete-orphan")
     map: Mapped[Optional["Map"]] = relationship("Map", back_populates="itinerary", uselist=False, cascade="all, delete-orphan")
     tags: Mapped[List["Tag"]] = relationship("Tag", back_populates="itinerary", cascade="all, delete-orphan")
+
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
 
 
 # Insert event

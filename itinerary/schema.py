@@ -1,3 +1,4 @@
+from datetime import datetime
 from pydantic import BaseModel
 from typing import List, Optional
 
@@ -79,6 +80,7 @@ class ItinerarySchema(BaseModel):
     days: List[ItineraryDaySchema] = []
     map: Optional[MapSchema]
     tags: List[TagSchema] = []
+    created_at: datetime
 
     class Config:
         from_attributes = True
