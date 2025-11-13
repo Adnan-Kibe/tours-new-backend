@@ -224,6 +224,7 @@ async def create_itinerary(request: ItineraryCreateSchema, db: db_dependency):
         accommodation=request.accommodation,
         location=request.location,
         discount=request.discount or 0,
+        price=request.price,
         cost_inclusive=request.cost_inclusive,
         cost_exclusive=request.cost_exclusive,
     )

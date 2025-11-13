@@ -73,6 +73,7 @@ class ItinerarySchema(BaseModel):
     accommodation: str
     location: str
     discount: int
+    price: int
     cost_inclusive: Optional[List[dict]] = []
     cost_exclusive: Optional[List[dict]] = []
     images: List[ImageSchema] = []
@@ -123,6 +124,7 @@ class ItineraryCreateSchema(BaseModel):
     accommodation: str
     location: str
     discount: Optional[int] = 0
+    price: int
     cost_inclusive: Optional[List[dict]] = []
     cost_exclusive: Optional[List[dict]] = []
 

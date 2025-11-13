@@ -64,6 +64,7 @@ class Itinerary(Base):
     discount: Mapped[int] = mapped_column(Integer, default=0)
     cost_inclusive: Mapped[List[dict]] = mapped_column(JSON, nullable=True)
     cost_exclusive: Mapped[List[dict]] = mapped_column(JSON, nullable=True)
+    price: Mapped[int] = mapped_column(Integer, nullable=False)
 
     images: Mapped[List["Image"]] = relationship(
         "Image",
