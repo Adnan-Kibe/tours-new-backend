@@ -1,3 +1,5 @@
+import cloudinary
+import cloudinary.uploader
 from fastapi import APIRouter, HTTPException, status
 from typing import List
 
@@ -112,10 +114,30 @@ async def get_itinerary(slug: str, db: db_dependency):
             detail=f"An unexpected error occurred: {str(e)}"
         )
     
-@router.delete("/{slug}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{slug}", status_code=status.HTTP_200_OK)
 async def delete_itinerary(slug: str, db: db_dependency):
+    if not slug:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No slug was provided"
+        )
+
     try:
-        itinerary = db.query(Itinerary).filter(Itinerary.slug == slug).first()
+        # Fetch itinerary with all related images
+        itinerary = (
+            db.query(Itinerary)
+            .options(
+                selectinload(Itinerary.images),
+                selectinload(Itinerary.tags),
+                selectinload(Itinerary.map).selectinload(Map.image),
+                selectinload(Itinerary.days).selectinload(ItineraryDay.images),
+                selectinload(Itinerary.days)
+                    .selectinload(ItineraryDay.hotel_detail)
+                    .selectinload(HotelDetail.images),
+            )
+            .filter(Itinerary.slug == slug)
+            .first()
+        )
 
         if not itinerary:
             logger.warning(f"Itinerary with slug '{slug}' not found for deletion.")
@@ -124,21 +146,68 @@ async def delete_itinerary(slug: str, db: db_dependency):
                 detail="Itinerary not found"
             )
 
+        title = itinerary.title
+        itinerary_id = itinerary.id
+        logger.info(f"Deleting itinerary '{title}' (slug: {slug}, ID: {itinerary_id})")
+
+        # -------------------------------
+        # Delete all images from Cloudinary
+        # -------------------------------
+        try:
+            # Itinerary images
+            for img in itinerary.images:
+                if img and img.public_id:
+                    result = cloudinary.uploader.destroy(img.public_id, resource_type="image")
+                    logger.info(f"Deleted itinerary image {img.public_id}: {result}")
+
+            # Map image (single image, not a list)
+            if itinerary.map and itinerary.map.image:
+                img = itinerary.map.image
+                if img.public_id:
+                    result = cloudinary.uploader.destroy(img.public_id, resource_type="image")
+                    logger.info(f"Deleted map image {img.public_id}: {result}")
+
+            # Day images and hotel images
+            for day in itinerary.days:
+                # Day images
+                for img in day.images:
+                    if img and img.public_id:
+                        result = cloudinary.uploader.destroy(img.public_id, resource_type="image")
+                        logger.info(f"Deleted day image {img.public_id}: {result}")
+
+                # Hotel images
+                if day.hotel_detail:
+                    for img in day.hotel_detail.images:
+                        if img and img.public_id:
+                            result = cloudinary.uploader.destroy(img.public_id, resource_type="image")
+                            logger.info(f"Deleted hotel image {img.public_id}: {result}")
+
+        except Exception as cloudinary_error:
+            logger.error(f"Cloudinary deletion failed: {str(cloudinary_error)}")
+            # Continue with database deletion even if Cloudinary fails
+
+        # Delete from database (cascade will handle related records)
         db.delete(itinerary)
         db.commit()
-        logger.info(f"Itinerary with slug '{slug}' deleted successfully.")
-        return
+        logger.info(f"Successfully deleted itinerary '{title}' from database")
+
+        return {"message": f"Itinerary '{title}' deleted successfully"}
+
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
     
     except SQLAlchemyError as e:
-    # Database-specific errors
-        logger.error(f"Database error occurred: {str(e)}")
+        db.rollback()
+        logger.error(f"Database error while deleting itinerary '{slug}': {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database error occurred"
         )
+    
     except Exception as e:
-        # Catch-all for other errors
-        logger.error(f"An unexpected error occurred: {str(e)}")
+        db.rollback()
+        logger.error(f"Unexpected error while deleting itinerary '{slug}': {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"An unexpected error occurred: {str(e)}"
