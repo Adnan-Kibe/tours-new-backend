@@ -20,7 +20,6 @@ async def get_upload_signature():
     """
     timestamp = int(datetime.now().timestamp())
 
-    # Options for upload
     params_to_sign = {
         "timestamp": timestamp,
         "folder": "itineraries",            
@@ -31,7 +30,6 @@ async def get_upload_signature():
         params_to_sign,
         os.getenv("CLOUDINARY_API_SECRET")
     )
-    
 
     return {
         "cloud_name": os.getenv("CLOUDINARY_CLOUD_NAME"),
