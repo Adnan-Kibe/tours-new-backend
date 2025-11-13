@@ -22,8 +22,7 @@ async def get_upload_signature():
 
     params_to_sign = {
         "timestamp": timestamp,
-        "folder": "itineraries",            
-        "resource_type": "image",           
+        "folder": "itineraries",                     
     }
 
     signature = cloudinary.utils.api_sign_request(
