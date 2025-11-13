@@ -44,8 +44,7 @@ class ItineraryDaySchema(BaseModel):
 # ----------------------------
 class MapSchema(BaseModel):
     id: str
-    name: Optional[str]
-    images: List[ImageSchema] = []
+    images: Optional[ImageSchema] = None
 
     class Config:
         from_attributes = True
@@ -91,3 +90,45 @@ class ItinerarySchema(BaseModel):
 class ItinerariesResponseSchema(BaseModel):
     itineraries: List[ItinerarySchema]
     total: int
+
+class ImageCreateSchema(BaseModel):
+    url: str
+    public_id: str
+
+class HotelDetailCreateSchema(BaseModel):
+    name: str
+    url: Optional[str] = None
+    images: Optional[List[ImageCreateSchema]] = []
+
+class ItineraryDayCreateSchema(BaseModel):
+    day_number: int
+    title: str
+    description: str
+    hotel_detail: Optional[HotelDetailCreateSchema] = None
+    images: Optional[List[ImageCreateSchema]] = []
+
+class MapCreateSchema(BaseModel):
+    # Only a single image for the map
+    image: Optional[ImageCreateSchema] = None
+
+class TagCreateSchema(BaseModel):
+    item: str
+
+class ItineraryCreateSchema(BaseModel):
+    title: str
+    overview: str
+    duration: int
+    arrival_city: str
+    departure_city: str
+    accommodation: str
+    location: str
+    discount: Optional[int] = 0
+    cost_inclusive: Optional[List[dict]] = []
+    cost_exclusive: Optional[List[dict]] = []
+
+    # Nested relationships
+    days: Optional[List[ItineraryDayCreateSchema]] = []
+    map: Optional[MapCreateSchema] = None
+    tags: Optional[List[TagCreateSchema]] = []
+    images: Optional[List[ImageCreateSchema]] = []
+

@@ -98,15 +98,15 @@ class Map(Base):
     __tablename__ = "maps"
 
     id: Mapped[str] = mapped_column(String, primary_key=True, unique=True, index=True, default=lambda: generate_id("MAP"))
-    name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    
-    # Add foreign key to link to Itinerary
+
+    # Foreign key to link to Itinerary
     itinerary_id: Mapped[str] = mapped_column(String, ForeignKey("itineraries.id"), nullable=False)
 
-    # Add back_populates for bidirectional relationship
+    # Bidirectional relationship
     itinerary: Mapped["Itinerary"] = relationship("Itinerary", back_populates="map")
 
-    images: Mapped[List["Image"]] = relationship(
+    # Single image relationship
+    image: Mapped[Optional["Image"]] = relationship(
         "Image",
         secondary="image_links",
         primaryjoin=and_(
@@ -114,6 +114,7 @@ class Map(Base):
             ImageLink.entity_type == 'map'
         ),
         secondaryjoin=foreign(ImageLink.image_id) == Image.id,
+        uselist=False,  # Ensures only one image is returned
         viewonly=True,
     )
 
